@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goosebumps Adventure - Teka-Teki Interaktif</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        .glow-text {
+            text-shadow: 0 0 10px rgba(34, 197, 94, 0.6);
+        }
+    </style>
+</head>
+<body class="bg-gray-950 text-gray-100 font-sans min-h-screen flex flex-col justify-between">
+
+    <div id="book-selection-screen" class="container mx-auto max-w-4xl p-6 my-auto">
+        <div class="text-center mb-10">
+            <h1 class="text-4xl font-extrabold text-green-500 tracking-widest uppercase glow-text mb-2">📖 Pilih Buku Goosebumps-mu</h1>
+            <p class="text-gray-400">Setiap buku memiliki alur misteri dan teka-teki yang berbeda. Pilih takdirmu!</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <button onclick="startBook('buku1')" class="bg-gray-900 border-2 border-red-900/50 hover:border-red-500 p-6 rounded-2xl text-left transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl hover:shadow-red-950/50 group">
+                <span class="bg-red-900/30 text-red-400 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Misteri & Horor</span>
+                <h2 class="text-2xl font-bold mt-3 text-gray-200 group-hover:text-red-400 transition-colors">1. Misteri Rumah Kosong Moga</h2>
+                <p class="text-sm text-gray-400 mt-2 leading-relaxed">Kamu terjebak di dalam rumah tua berhantu di lereng bukit. Pecahkan sandi mistis atau kamu akan terperangkap di dalamnya selamanya!</p>
+            </button>
+
+            <button onclick="startBook('buku2')" class="bg-gray-900 border-2 border-amber-900/50 hover:border-amber-500 p-6 rounded-2xl text-left transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl hover:shadow-amber-950/50 group">
+                <span class="bg-amber-900/30 text-amber-400 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Petualangan</span>
+                <h2 class="text-2xl font-bold mt-3 text-gray-200 group-hover:text-amber-400 transition-colors">2. Tersesat di Hutan Purba</h2>
+                <p class="text-sm text-gray-400 mt-2 leading-relaxed">Saat menjelajah, kamu terperosok ke lembah tersembunyi berisikan hewan purba. Gunakan logika matematikamu untuk mencari jalan pulang!</p>
+            </button>
+        </div>
+    </div>
+
+    <div id="game-screen" class="hidden flex-1 container mx-auto max-w-3xl p-4 flex flex-col justify-between gap-4">
+        
+        <div class="flex justify-between items-center bg-gray-900 p-3 rounded-xl border border-gray-800">
+            <div class="flex items-center gap-2">
+                <span class="text-xl">📚</span>
+                <h3 id="game-title" class="text-sm font-bold text-green-400">Judul Buku</h3>
+            </div>
+            <button onclick="exitGame()" class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1 rounded-lg border border-gray-700">
+                🚪 Keluar Menu
+            </button>
+        </div>
+
+        <div class="flex-1 bg-gray-900 border border-gray-800 rounded-2xl p-6 flex flex-col justify-center items-center relative overflow-hidden min-h-[250px]">
+            <div class="absolute inset-0 bg-radial from-transparent to-gray-950/80 pointer-events-none"></div>
+            <p id="story-text" class="text-lg md:text-xl text-center leading-relaxed text-gray-200 font-medium tracking-wide max-w-2xl">
+                Memuat narasi cerita...
+            </p>
+        </div>
+
+        <div id="puzzle-panel" class="bg-gray-900 border border-gray-800 p-5 rounded-2xl flex flex-col gap-4 shadow-xl">
+            <div class="border-b border-gray-800 pb-2">
+                <span class="text-xs font-bold uppercase tracking-widest text-amber-500">🧩 Teka-Teki Panel Bawah:</span>
+                <p id="puzzle-question" class="text-sm text-gray-300 mt-1 font-mono">Pertanyaan teka-teki akan muncul di sini...</p>
+            </div>
+
+            <div id="choices-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                </div>
+        </div>
+
+    </div>
+
+    <footer class="bg-gray-950 p-4 text-center text-xs text-gray-600 border-t border-gray-900">
+        Goosebumps Dynamic Engine &copy; 2026 - Bikin Alur Ceritamu Sendiri
+    </footer>
+
+    <script>
+        // DATA DATABASE BUKU (Bisa ditambah terus ke bawah tanpa ganggu sistem dasar)
+        const databaseBuku = {
+            buku1: {
+                judul: "Misteri Rumah Kosong Moga",
+                startNode: "mulai",
+                storyline: {
+                    mulai: {
+                        cerita: "Kamu melangkah masuk ke dalam rumah kosong tua. Pintu tiba-tiba membanting menutup di belakangmu! Di depanmu ada tangga menuju lantai atas yang gelap dan pintu ruang bawah tanah yang terkunci gembok kombinasi angka.",
+                        tekaTeki: "Gembok butuh jawaban dari deret ini: 2, 4, 8, ... Berapa angka selanjutnya untuk membuka pintu bawah tanah?",
+                        pilihan: [
+                            { teks: "Isi '16' (Masuk ke Bawah Tanah)", targetNode: "bawah_tanah", benar: true },
+                            { teks: "Isi '12' (Gembok Meledak!)", targetNode: "gameover_gembok", benar: false },
+                            { teks: "Abaikan Gembok, Naik Ke Tangga Atas", targetNode: "lantai_atas", benar: true }
+                        ]
+                    },
+                    bawah_tanah: {
+                        cerita: "KLIK! Gembok terbuka. Kamu turun ke ruang bawah tanah dan menemukan kotak harta karun tua terlindungi medan magnet digital. Di dinding tertulis: 'Kurangi 15 dari 100, lalu kalikan 2'.",
+                        tekaTeki: "Berapakah hasil akhir perhitungan mistis tersebut untuk mematikan medan magnet?",
+                        pilihan: [
+                            { teks: "Jawab '170'", targetNode: "tamat_menang", benar: true },
+                            { teks: "Jawab '185'", targetNode: "gameover_magnet", benar: false }
+                        ]
+                    },
+                    lantai_atas: {
+                        cerita: "Kamu naik tangga, tapi sayang kayunya lapuk! Kamu terperosok jatuh ke tumpukan jerami hantu di bawahnya. Kamu terkurung selamanya di dalam ilusi waktu.",
+                        tekaTeki: "GAME OVER - Kamu salah memilih jalur aman.",
+                        pilihan: [
+                            { teks: "🔄 Coba Lagi Buku Ini", targetNode: "mulai", benar: true }
+                        ]
+                    },
+                    gameover_gembok: {
+                        cerita: "BOOM! Salah memasukkan kode membuat jebakan gembok aktif dan mengeluarkan gas tidur. Kamu pingsan dan menjadi pelayan hantu rumah ini.",
+                        tekaTeki: "GAME OVER - Salah memecahkan teka-teki.",
+                        pilihan: [
+                            { teks: "🔄 Coba Lagi Buku Ini", targetNode: "mulai", benar: true }
+                        ]
+                    },
+                    gameover_magnet: {
+                        cerita: "ZAPPP! Sengatan listrik statis melontarkanmu kembali ke pintu keluar. Kamu gagal mendapatkan harta karun dan lari ketakutan keluar rumah.",
+                        tekaTeki: "GAME OVER - Harta karun gagal didapatkan.",
+                        pilihan: [
+                            { teks: "🔄 Coba Lagi Buku Ini", targetNode: "mulai", benar: true }
+                        ]
+                    },
+                    tamat_menang: {
+                        cerita: "Selamat! Kotak terbuka dan isinya adalah kunci emas keluar dari rumah ini beserta berlian murni. Kamu berhasil memenangkan petualangan ini dengan selamat!",
+                        tekaTeki: "TAMAT - Kamu adalah Master Teka-Teki!",
+                        pilihan: [
+                            { teks: "🎉 Mainkan Buku Lainnya", targetNode: "EXIT_GAME", benar: true }
+                        ]
+                    }
+                }
+            },
+            buku2: {
+                judul: "Tersesat di Hutan Purba",
+                startNode: "mulai",
+                storyline: {
+                    mulai: {
+                        cerita: "Kamu terperosok ke dalam hutan purba yang hilang dari peta. Di depanmu ada seekor T-Rex yang sedang tidur menghalangi jalan, dan di sebelah kananmu ada sungai berarus deras penuh piranha purba.",
+                        tekaTeki: "Untuk menjinakkan atau mengalihkan perhatian, kamu melihat ada buah raksasa seberat 50kg. Jika kamu memotongnya jadi 5 bagian sama rata, berapa berat 1 potongnya?",
+                        pilihan: [
+                            { teks: "Lempar potongan '10kg' ke arah lain", targetNode: "hutan_aman", benar: true },
+                            { teks: "Nekat Seberangi Sungai Piranha", targetNode: "gameover_piranha", benar: false }
+                        ]
+                    },
+                    hutan_aman: {
+                        cerita: "T-Rex terbangun dan mengejar buah 10kg yang kamu lempar! Kamu berhasil lari ke area gua purba yang memiliki tulisan sandi komputer kuno: '0101 dalam biner sama dengan angka berapa di desimal?'",
+                        tekaTeki: "Pecahkan kode biner komputer kuno ini untuk membuka pintu keluar rahasia!",
+                        pilihan: [
+                            { teks: "Ketik Angka '5'", targetNode: "tamat_selamat", benar: true },
+                            { teks: "Ketik Angka '4'", targetNode: "gameover_gua", benar: false }
+                        ]
+                    },
+                    gameover_piranha: {
+                        cerita: "Aduh! Piranha purba langsung menyergap sepatumu saat baru menyentuh air. Kamu terpaksa mundur dan pingsan karena kelelahan.",
+                        tekaTeki: "GAME OVER - Keputusan yang terlalu ceroboh.",
+                        pilihan: [
+                            { teks: "🔄 Coba Lagi Buku Ini", targetNode: "mulai", benar: true }
+                        ]
+                    },
+                    gameover_gua: {
+                        cerita: "Sandi salah! Langit-langit gua runtuh berlahan menutup jalan keluar selamanya. Kamu terjebak di zaman purba.",
+                        tekaTeki: "GAME OVER - Gagal memecahkan sandi biner komputer.",
+                        pilihan: [
+                            { teks: "🔄 Coba Lagi Buku Ini", targetNode: "mulai", benar: true }
+                        ]
+                    },
+                    tamat_selamat: {
+                        cerita: "Pintu batu gua bergeser terbuka! Di balik pintu adalah jalan setapak menuju desamu kembali. Kamu berhasil pulang membawa cerita sejarah yang luar biasa!",
+                        tekaTeki: "TAMAT - Logika menyelematkan nyawamu!",
+                        pilihan: [
+                            { teks: "🎉 Mainkan Buku Lainnya", targetNode: "EXIT_GAME", benar: true }
+                        ]
+                    }
+                }
+            }
+        };
+
+        // GAME STATE VARIABLE
+        let bukuAktif = null;
+        let nodeAktif = "";
+
+        // Fungsi Memulai Buku yang Dipilih
+        function startBook(bookKey) {
+            bukuAktif = databaseBuku[bookKey];
+            nodeAktif = bukuAktif.startNode;
+
+            // Pindah Layar
+            document.getElementById('book-selection-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+
+            // Set Judul
+            document.getElementById('game-title').innerText = bukuAktif.judul;
+
+            // Render Cerita Pertama
+            renderState();
+        }
+
+        // Fungsi Render Cerita dan Pilihan secara Dinamis
+        function renderState() {
+            const currentData = bukuAktif.storyline[nodeAktif];
+
+            // Update teks cerita dan pertanyaan teka-teki
+            document.getElementById('story-text').innerText = currentData.cerita;
+            document.getElementById('puzzle-question').innerText = currentData.tekaTeki;
+
+            // Kosongkan kontainer tombol pilihan lama
+            const choicesContainer = document.getElementById('choices-container');
+            choicesContainer.innerHTML = '';
+
+            // Buat tombol baru berdasarkan opsi pilihan di JSON data
+            currentData.pilihan.forEach(opsi => {
+                const btn = document.createElement('button');
+                
+                // Beri warna pembeda: kalau jawaban salah/benar secara visual (opsional untuk kosmetik)
+                btn.className = "p-3 rounded-xl border bg-gray-950/40 text-left text-sm font-medium transition-all duration-200 cursor-pointer hover:bg-gray-800 border-gray-800 hover:border-green-500/50";
+                btn.innerText = opsi.teks;
+                
+                // Pasang fungsi klik
+                btn.onclick = () => {
+                    if(opsi.targetNode === "EXIT_GAME") {
+                        exitGame();
+                    } else {
+                        nodeAktif = opsi.targetNode;
+                        renderState();
+                    }
+                };
+                
+                choicesContainer.appendChild(btn);
+            });
+        }
+
+        // Fungsi untuk Kembali ke Menu Utama
+        function exitGame() {
+            bukuAktif = null;
+            nodeAktif = "";
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('book-selection-screen').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
