@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goosebumps: Terjebak di Wonderland</title>
+    <!-- Tailwind CSS v4 via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        .glow-green {
+            text-shadow: 0 0 15px rgba(34, 197, 94, 0.8);
+        }
+        .story-gradient {
+            background: linear-gradient(to top, rgba(3, 7, 18, 1) 20%, rgba(3, 7, 18, 0.5) 65%, rgba(3, 7, 18, 0.1) 100%);
+        }
+        /* Animasi Flash Screen saat salah/kejutan */
+        @keyframes flash-red {
+            0%, 100% { background-color: transparent; }
+            50% { background-color: rgba(220, 38, 38, 0.7); }
+        }
+        .animate-flash {
+            animation: flash-red 0.4s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-950 text-gray-100 font-sans min-h-screen flex flex-col justify-between select-none relative">
+
+    <!-- Efek Overlay Flash untuk Animasi Gagal -->
+    <div id="flash-overlay" class="absolute inset-0 pointer-events-none z-50 transition-all duration-200"></div>
+
+    <!-- MAIN GAME SCREEN (Langsung masuk ke petualangan Alice) -->
+    <div id="game-screen" class="flex-1 container mx-auto max-w-3xl p-4 flex flex-col justify-between gap-4 my-auto">
+        
+        <!-- Status Bar -->
+        <div class="flex justify-between items-center bg-gray-900/90 backdrop-blur p-3 rounded-xl border border-gray-800 shadow-md">
+            <div class="flex items-center gap-2">
+                <span class="text-lg">🐇</span>
+                <h3 class="text-xs md:text-sm font-black text-green-400 tracking-wider uppercase">Goosebumps: Misteri Labirin Wonderland</h3>
+            </div>
+            <div class="text-xs bg-gray-900 px-3 py-1 rounded-lg border border-gray-800 font-mono text-amber-400">
+                Langkah: <span id="step-counter">0</span>
+            </div>
+        </div>
+
+        <!-- PANEL UTAMA: Visual Gambar dengan Animasi Transisi & Narasi Typewriter -->
+        <div id="visual-panel" class="flex-1 bg-gray-900 border border-gray-800 rounded-2xl flex flex-col justify-end relative overflow-hidden min-h-[360px] shadow-2xl bg-cover bg-center transition-all duration-700 opacity-100">
+            <div class="absolute inset-0 story-gradient pointer-events-none"></div>
+            
+            <div class="p-6 relative z-10 max-w-2xl mx-auto text-center">
+                <!-- Teks Narasi Cerita -->
+                <p id="story-text" class="text-base md:text-lg text-gray-100 font-medium tracking-wide leading-relaxed filter drop-shadow-[0_2px_4px_rgba(0,0,0,1)]">
+                    Memulai petualangan...
+                </p>
+            </div>
+        </div>
+
+        <!-- PANEL BAWAH: Teka-teki & Tombol Pilihan Alur -->
+        <div id="puzzle-panel" class="bg-gray-900 border border-gray-800 p-5 rounded-2xl flex flex-col gap-4 shadow-xl">
+            <div class="border-b border-gray-800 pb-3 flex items-start gap-2">
+                <span class="text-lg mt-0.5">👁️‍🗨️</span>
+                <div>
+                    <span id="puzzle-type" class="text-xs font-bold uppercase tracking-widest text-amber-500">Tipe Tantangan</span>
+                    <p id="puzzle-question" class="text-sm md:text-base text-gray-300 mt-1 font-mono font-semibold">Memuat teka-teki...</p>
+                </div>
+            </div>
+
+            <!-- Pilihan Jawaban -->
+            <div id="choices-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <!-- Tombol digenerate oleh JS -->
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-950 p-3 text-center text-xs text-gray-600 border-t border-gray-900">
+        Alice's Adventures Adventure Engine &copy; 2026
+    </footer>
+
+    <script>
+        // SOUND ENGINE (Placeholder menggunakan Audio Sintetis atau Link Bebas Hak Cipta)
+        const sfxCorrect = new Audio("https://assets.mixkit.co/active_storage/sfx/2019/2019-84.wav");
+        const sfxWrong = new Audio("https://assets.mixkit.co/active_storage/sfx/2544/2544-84.wav");
+
+        // DATABASE ALUR CERITA ALICE SAMPAI TAMAT
+        const storyline = {
+            mulai: {
+                cerita: "Kamu terperosok ke dalam lubang kelinci yang sangat dalam. Alih-alih mendarat di tumpukan daun, kamu terdampar di aula kuno terkunci dengan meja kaca kecil berisikan kunci emas kecil. Di sudut ruangan, ada pintu setinggi 30 cm yang mengarah ke taman indah, namun tubuhmu terlalu besar. Di atas meja, ada botol bertuliskan 'MINUM AKU'.",
+                tekaTeki: "Jebakan Logika: Jika cairan di botol bisa mengecilkan tubuhmu, dan kue di lantai bisa membesarkan tubuhmu, mana yang harus kamu konsumsi PERTAMA kali untuk melewati pintu 30 cm setelah mengambil kunci emas?",
+                tipe: "JEBAKAN URUTAN LOGIKA",
+                visualUrl: "https://images.unsplash.com/photo-1508847154043-be12a62861c1?q=80&w=800&auto=format&fit=crop",
+                pilihan: [
+                    { teks: "Minum isi botol dulu baru ambil kunci", targetNode: "gameover_kunci", isCorrect: false },
+                    { teks: "Ambil kunci emas dulu baru minum isi botol", targetNode: "hutan_cheshire", isCorrect: true },
+                    { teks: "Makan kue di lantai langsung", targetNode: "gameover_raksasa", isCorrect: false }
+                ]
+            },
+            hutan_cheshire: {
+                cerita: "Tubuhmu mengecil! Kamu berhasil membuka pintu dan berlari keluar menuju hutan aneh bercahaya neon. Di atas sebatang pohon tua, muncul senyuman lebar misterius milik Kucing Cheshire yang melayang. Ia berbisik menjebak: 'Semua orang di sini gila. Jika kamu ingin menemukan jalan pulang, jawab pertanyaanku: Aku tidak punya daging, tidak punya bulu, tidak punya sisik, dan tidak punya tulang. Namun aku punya jari dan ibu jari sendiri. Siapakah aku?'",
+                tekaTeki: "Pecahkan Riddle dari Kucing Cheshire untuk mendapatkan penunjuk arah keluar hutan!",
+                tipe: "RIDDLE / TEKA-TEKI KATA",
+                visualUrl: "https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=800&auto=format&fit=crop",
+                pilihan: [
+                    { teks: "Sebuah Sarung Tangan (Glove)", targetNode: "pesta_teh", isCorrect: true },
+                    { teks: "Sesosok Hantu", targetNode: "gameover_cheshire", isCorrect: false },
+                    { teks: "Sebuah Bayangan", targetNode: "gameover_cheshire", isCorrect: false }
+                ]
+            },
+            pesta_teh: {
+                cerita: "Kucing Cheshire menunjuk ke arah meja panjang di tengah padang rumput. Di sana, Mad Hatter sedang mengadakan pesta teh abadi bersama March Hare. Mad Hatter yang eksentrik langsung menuangkan teh hijau mendidih ke cangkirmu dan menantangmu: 'Kamu mau pulang? Selesaikan pertanyaan umum sains zaman abad pertengahan ini dulu: Apa yang bobotnya lebih berat di bumi ini, 1 Kilogram Emas murni, atau 1 Kilogram Bulu Burung Flamingo?'",
+                tekaTeki: "Awas pertanyaan jebakan sains! Mana yang memiliki bobot lebih berat?",
+                tipe: "PENGETAHUAN UMUM / SAINS",
+                visualUrl: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?q=80&w=800&auto=format&fit=crop",
+                pilihan: [
+                    { teks: "1 Kilogram Emas", targetNode: "gameover_hatter", isCorrect: false },
+                    { teks: "1 Kilogram Bulu Burung", targetNode: "gameover_hatter", isCorrect: false },
+                    { teks: "Keduanya sama berat (Sama-sama 1 KG)", targetNode: "istana_ratu", isCorrect: true }
+                ]
+            },
+            istana_ratu: {
+                cerita: "Mad Hatter menjerit kesal karena logikamu tepat. Kamu berlari kencang hingga sampai di taman labirin mawar milik Ratu Hati (Queen of Hearts). Tentara kartu remi mengepungmu! Sang Ratu yang kejam berteriak: 'POTONG KEPALANYA! Kecuali... kamu bisa menjawab teka-teki jebakan kalimatku: Jika ada 4 bersaudara tentara kartu di dalam ruangan, kartu pertama sedang bermain catur, kartu kedua sedang membaca buku sejarah, dan kartu ketiga sedang tidur siang... Apa yang sedang dilakukan oleh kartu keempat?'",
+                tekaTeki: "Analisis situasi ruang dan teks dengan cermat! Apa aktivitas kartu keempat?",
+                tipe: "JEBAKAN LOGIKA REKREASI",
+                visualUrl: "https://images.unsplash.com/photo-1600577916048-804c9191e36c?q=80&w=800&auto=format&fit=crop",
+                pilihan: [
+                    { teks: "Sedang bermain catur bersama kartu pertama", targetNode: "tamat_menang", isCorrect: true },
+                    { teks: "Sedang mencari jalan keluar labirin", targetNode: "gameover_ratu", isCorrect: false },
+                    { teks: "Sedang menyapu lantai istana", targetNode: "gameover_ratu", isCorrect: false }
+                ]
+            },
+            // JALUR GAME OVER
+            gameover_kunci: {
+                cerita: "Kamu langsung meminum isi botol dan tubuhmu mengecil setinggi 30 cm! Tapi sial... kunci emasnya tertinggal di atas meja kaca yang tinggi. Kamu tidak bisa menjangkaunya lagi dan terperangkap di aula selamanya.",
+                tekaTeki: "GAME OVER - Urutan tindakanmu salah fatal.",
+                visualUrl: "https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?q=80&w=800&auto=format&fit=crop",
+                pilihan: [{ teks: "🔄 Ulangi dari Awal", targetNode: "mulai", isCorrect: false }]
+            },
+            gameover_raksasa: {
+                cerita: "Kamu memakan kue tersebut. BAMM! Tubuhmu membesar hingga menyentuh langit-langit aula kuno. Ruangan runtuh menghimpit tubuh raksasamu. Kamu terjebak di dalam reruntuhan batu.",
+                tekaTeki: "GAME OVER - Keputusan yang terlalu ceroboh.",
+                visualUrl: "https://images.unsplash.com/photo-1507146426996-ef05306b995a?q=80&w=800&auto=format&fit=crop",
+                pilihan: [{ teks: "🔄 Ulangi dari Awal", targetNode: "mulai", isCorrect: false }]
+            },
+            gameover_cheshire: {
+                cerita: "Jawabanmu salah! Senyuman Kucing Cheshire berubah menjadi seringai mengerikan. Ia memanggil kabut ilusi tebal yang membuatmu berputar-putar di dalam hutan tanpa pernah bisa keluar lagi.",
+                tekaTeki: "GAME OVER - Kamu terkecoh oleh teka-teki kata Cheshire.",
+                visualUrl: "https://images.unsplash.com/photo-1505635552518-3448ff116af3?q=80&w=800&auto=format&fit=crop",
+                pilihan: [{ teks: "🔄 Ulangi dari Awal", targetNode: "mulai", isCorrect: false }]
+            },
+            gameover_hatter: {
+                cerita: "Salah! Mad Hatter tertawa histeris sambil melempar teko teh panas ke arahmu. Waktu berputar mundur paksa dan kamu diikat di kursi pesta teh untuk mendengarkan celoteh gila mereka selamanya.",
+                tekaTeki: "GAME OVER - Terjebak di paradoks waktu pesta teh.",
+                visualUrl: "https://images.unsplash.com/photo-1555664424-778a1e5e1b48?q=80&w=800&auto=format&fit=crop",
+                pilihan: [{ teks: "🔄 Ulangi dari Awal", targetNode: "mulai", isCorrect: false }]
+            },
+            gameover_ratu: {
+                cerita: "Ratu Hati murka mendengar jawabanmu. 'SALAH BESAR!' teriaknya. Seluruh barisan tentara kartu remi menyergap dan mengurungmu di dalam penjara bawah tanah istana.",
+                tekaTeki: "GAME OVER - Eksekusi hukuman Ratu aktif.",
+                visualUrl: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=800&auto=format&fit=crop",
+                pilihan: [{ teks: "🔄 Ulangi dari Awal", targetNode: "mulai", isCorrect: false }]
+            },
+            // FINISH / TAMAT
+            tamat_menang: {
+                cerita: "Benar sekali! Catur membutuhkan 2 orang untuk dimainkan, jadi kartu keempat pasti sedang bermain bersama kartu pertama! Mendengar jawaban super jenius itu, seluruh ilusi istana Wonderland mendadak retak dan hancur bagai kaca. BYAARR!! Kamu membuka mata sambil tersengak, mendapati dirimu terbangun di bawah rindangnya pohon bukit tempatmu tertidur semula. Petualangan ekstrem ini berakhir, dan kamu berhasil pulang dengan selamat!",
+                tekaTeki: "CONGRATULATIONS - Kamu Berhasil Menamatkan Buku Wonderland!",
+                tipe: "VICTORY / TAMAT",
+                visualUrl: "https://images.unsplash.com/photo-1509114397022-ed747cca3f65?q=80&w=800&auto=format&fit=crop",
+                pilihan: [{ teks: "🎉 Mainkan Lagi dari Awal", targetNode: "mulai", isCorrect: true }]
+            }
+        };
+
+        let currentNode = "mulai";
+        let stepCount = 0;
+        let typewriterTimeout = null;
+
+        // ANIMASI 1: TYPEWRITER EFFECT (Mengetik Teks Cerita)
+        function typeWriter(text, elementId, speed = 15) {
+            const element = document.getElementById(elementId);
+            element.innerText = "";
+            let i = 0;
+            
+            if (typewriterTimeout) clearTimeout(typewriterTimeout);
+
+            function type() {
+                if (i < text.length) {
+                    element.innerText += text.charAt(i);
+                    i++;
+                    typewriterTimeout = setTimeout(type, speed);
+                }
+            }
+            type();
+        }
+
+        // FUNGSI UTAMA RENDER LOGIKA & ANIMASI GAME
+        function renderGame() {
+            const currentData = storyline[currentNode];
+            
+            // Update Counter Langkah
+            document.getElementById('step-counter').innerText = stepCount;
+
+            // ANIMASI 2: TRANSISI FADE IMAGE (Mengubah background secara halus)
+            const visualPanel = document.getElementById('visual-panel');
+            visualPanel.style.opacity = "0.3"; // Meredupkan layar sejenak
+            
+            setTimeout(() => {
+                visualPanel.style.backgroundImage = `url('${currentData.visualUrl}')`;
+                visualPanel.style.opacity = "1"; // Munculkan kembali dengan gambar baru
+                
+                // Jalankan efek mesin ketik setelah gambar ter-load
+                typeWriter(currentData.cerita, 'story-text');
+            }, 250);
+
+            // Update Teks Teka-Teki
+            document.getElementById('puzzle-question').innerText = currentData.tekaTeki;
+            document.getElementById('puzzle-type').innerText = `Tantangan: ${currentData.tipe}`;
+
+            // Generate Tombol Jawaban
+            const choicesContainer = document.getElementById('choices-container');
+            choicesContainer.innerHTML = '';
+
+            currentData.pilihan.forEach(opsi => {
+                const btn = document.createElement('button');
+                btn.className = "p-3 rounded-xl border bg-gray-950/70 backdrop-blur-sm text-left text-xs md:text-sm font-medium transition-all duration-200 cursor-pointer hover:bg-green-950/60 border-gray-800 hover:border-green-500 hover:scale-[1.02]";
+                btn.innerText = opsi.teks;
+                
+                btn.onclick = () => {
+                    stepCount++;
+                    
+                    // PENANGANAN EFEK SUARA DAN ANIMASI FLASH SCREEN
+                    if (opsi.isCorrect) {
+                        sfxCorrect.currentTime = 0;
+                        sfxCorrect.play().catch(() => {});
+                    } else {
+                        sfxWrong.currentTime = 0;
+                        sfxWrong.play().catch(() => {});
+                        
+                        // ANIMASI 3: FLASH RED SCREEN (Layar berkedip merah saat salah/game over)
+                        const flashOverlay = document.getElementById('flash-overlay');
+                        flashOverlay.classList.add('animate-flash');
+                        setTimeout(() => {
+                            flashOverlay.classList.remove('animate-flash');
+                        }, 400);
+
+                        if(opsi.targetNode === "mulai") stepCount = 0; // Reset counter jika balik awal
+                    }
+
+                    // Pindah Simpul Cerita
+                    currentNode = opsi.targetNode;
+                    renderGame();
+                };
+                choicesContainer.appendChild(btn);
+            });
+        }
+
+        // Jalankan game saat halaman selesai dimuat
+        window.onload = () => {
+            renderGame();
+        };
+    </script>
+</body>
+</html>
