@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AlgoTrack - Visualisasi Filtering Data</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        .code-highlight {
+            background-color: rgba(234, 179, 8, 0.3);
+            border-left: 4px solid #eab308;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 font-sans min-h-screen flex flex-col">
+
+    <header class="bg-gray-800 border-b border-gray-700 p-4 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold text-amber-500 tracking-wider">⚡ AlgoTrack <span class="text-xs text-gray-400 font-normal">v1.0</span></h1>
+            <p class="text-sm text-gray-400">STEM Micro-Learning: Visualisasi Looping & Filtering</p>
+        </div>
+    </header>
+
+    <main class="flex-1 container mx-auto p-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <div class="lg:col-span-2 flex flex-col gap-6">
+            
+            <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-sm">
+                <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Panel Kontrol</h2>
+                <div class="flex flex-wrap items-center gap-4">
+                    <button id="btn-next" class="bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold py-2 px-6 rounded-lg transition shadow-md flex items-center gap-2">
+                        ▶ Step Berikutnya
+                    </button>
+                    <button id="btn-reset" class="bg-gray-700 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition border border-gray-600">
+                        🔄 Reset
+                    </button>
+                    <div class="text-sm bg-gray-900 px-3 py-2 rounded-lg border border-gray-700">
+                        Status: <span id="status-text" class="text-amber-400 font-semibold">Siap Dimulai</span>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-400 mt-3">*Klik "Step Berikutnya" untuk menjalankan algoritma baris demi baris.</p>
+            </div>
+
+            <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 flex-1 flex flex-col justify-between min-h-[350px]">
+                
+                <div>
+                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Data Sumber (Cari yang > 50):</h3>
+                    <div id="source-container" class="flex gap-3 flex-wrap">
+                        </div>
+                </div>
+
+                <div class="my-6 border-t border-dashed border-gray-600 flex justify-center items-center relative">
+                    <span class="bg-gray-800 px-3 text-xs text-gray-500 uppercase tracking-widest absolute">Proses Penyaringan Kondisi</span>
+                </div>
+
+                <div>
+                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Hasil Filter (Data Lolos Syarat):</h3>
+                    <div id="target-container" class="flex gap-3 flex-wrap min-h-[60px] p-2 bg-gray-900/50 rounded-lg border border-gray-700/50">
+                        </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-sm flex flex-col">
+            <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Panel Code-Trace</h2>
+            
+            <div class="bg-gray-900 p-4 rounded-lg font-mono text-sm leading-relaxed overflow-x-auto border border-gray-700 flex-1">
+                <div id="line-1" class="p-1 rounded transition-all duration-200 text-gray-400">// 1. Inisialisasi data dan wadah hasil</div>
+                <div id="line-2" class="p-1 rounded transition-all duration-200 text-blue-400">let dataSaring = [];</div>
+                <div id="line-3" class="p-1 rounded transition-all duration-200 text-gray-400">// 2. Mulai lakukan perulangan (Looping)</div>
+                <div id="line-4" class="p-1 rounded transition-all duration-200 text-purple-400">for (let i = 0; i < dataAwal.length; i++) {</div>
+                <div id="line-5" class="p-1 rounded transition-all duration-200 text-gray-400 pl-4">// 3. Cek kondisi (Filtering)</div>
+                <div id="line-6" class="p-1 rounded transition-all duration-200 text-pink-400 pl-4">if (dataAwal[i] > 50) {</div>
+                <div id="line-7" class="p-1 rounded transition-all duration-200 text-emerald-400 pl-8">dataSaring.push(dataAwal[i]);</div>
+                <div id="line-8" class="p-1 rounded transition-all duration-200 text-pink-400 pl-4">}</div>
+                <div id="line-9" class="p-1 rounded transition-all duration-200 text-purple-400">}</div>
+            </div>
+
+            <div class="mt-4 bg-gray-900/80 p-3 rounded-lg border border-gray-700">
+                <h4 class="text-xs font-bold text-gray-400 uppercase mb-1">Penjelasan Logika:</h4>
+                <p id="logic-explanation" class="text-xs text-gray-300">Silakan klik "Step Berikutnya" untuk memulai pelacakan logika.</p>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="bg-gray-800 border-t border-gray-700 p-3 text-center text-xs text-gray-500">
+        AlgoTrack &copy; 2026 - Project Simulasi STEM Interaktif
+    </footer>
+
+    <script>
+        // Data Awal untuk disimulasikan
+        const dataAwal = [25, 68, 12, 85, 45, 90, 55];
+        let currentIndex = -1;
+        let currentStep = 0; 
+        // State langkah: 0=mulai, 1=loop-check, 2=if-check, 3=push(jika lolos), 4=selesai
+
+        // DOM Elements
+        const sourceContainer = document.getElementById('source-container');
+        const targetContainer = document.getElementById('target-container');
+        const btnNext = document.getElementById('btn-next');
+        const btnReset = document.getElementById('btn-reset');
+        const statusText = document.getElementById('status-text');
+        const explanationText = document.getElementById('logic-explanation');
+
+        // Render Data Awal ke Layar
+        function initData() {
+            sourceContainer.innerHTML = '';
+            targetContainer.innerHTML = '';
+            dataAwal.forEach((val, idx) => {
+                const el = document.createElement('div');
+                el.id = `data-${idx}`;
+                el.className = "w-14 h-14 bg-gray-700 border-2 border-gray-600 rounded-lg flex items-center justify-center font-bold text-lg transition-all duration-300 shadow";
+                el.innerText = val;
+                sourceContainer.appendChild(el);
+            });
+            resetHighlights();
+            currentIndex = -1;
+            currentStep = 0;
+            statusText.innerText = "Siap Dimulai";
+            statusText.className = "text-amber-400 font-semibold";
+            explanationText.innerText = "Silakan klik 'Step Berikutnya' untuk memulai pelacakan logika.";
+            btnNext.disabled = false;
+            btnNext.className = "bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold py-2 px-6 rounded-lg transition shadow-md flex items-center gap-2";
+        }
+
+        function resetHighlights() {
+            for(let i=1; i<=9; i++) {
+                document.getElementById(`line-${i}`).classList.remove('code-highlight');
+            }
+        }
+
+        function highlightLine(lineNum) {
+            resetHighlights();
+            document.getElementById(`line-${lineNum}`).classList.add('code-highlight');
+        }
+
+        // Alur Kendali Jalannya Algoritma (Step-by-Step)
+        function nextStep() {
+            // Langkah Awal: Inisialisasi wadah kosong
+            if (currentIndex === -1 && currentStep === 0) {
+                highlightLine(2);
+                statusText.innerText = "Inisialisasi";
+                explanationText.innerText = "Membuat array kosong 'dataSaring' untuk menampung angka yang lolos filter (> 50).";
+                currentIndex = 0;
+                currentStep = 1; // lanjut ke perulangan
+                return;
+            }
+
+            // Jika indeks melampaui panjang data, artinya selesai
+            if (currentIndex >= dataAwal.length) {
+                highlightLine(9);
+                statusText.innerText = "Selesai!";
+                statusText.className = "text-emerald-400 font-semibold";
+                explanationText.innerText = "Perulangan selesai. Semua data telah diperiksa dan disaring!";
+                btnNext.disabled = true;
+                btnNext.className = "bg-gray-600 text-gray-400 py-2 px-6 rounded-lg cursor-not-allowed flex items-center gap-2";
+                return;
+            }
+
+            const currentVal = dataAwal[currentIndex];
+            
+            // Tandai elemen visual yang sedang aktif diperiksa
+            // Reset elemen sebelumnya ke warna asal
+            if (currentIndex > 0) {
+                const prevEl = document.getElementById(`data-${currentIndex-1}`);
+                if (!prevEl.classList.contains('border-emerald-500')) {
+                    prevEl.className = "w-14 h-14 bg-gray-800/40 border-2 border-gray-700 text-gray-500 rounded-lg flex items-center justify-center font-bold text-lg transition-all duration-300";
+                }
+            }
+            
+            const currentEl = document.getElementById(`data-${currentIndex}`);
+
+            if (currentStep === 1) {
+                // Masuk ke baris 'for loop'
+                highlightLine(4);
+                currentEl.className = "w-14 h-14 bg-blue-600 border-2 border-blue-400 rounded-lg flex items-center justify-center font-bold text-lg scale-105 transition-all duration-300 shadow-lg text-white";
+                statusText.innerText = `Looping (i = ${currentIndex})`;
+                explanationText.innerText = `Sistem menunjuk ke indeks ke-${currentIndex}, membaca nilai angka = ${currentVal}.`;
+                currentStep = 2; // lanjut ke cek kondisi
+            } 
+            else if (currentStep === 2) {
+                // Masuk ke baris 'if condition'
+                highlightLine(6);
+                statusText.innerText = "Pengecekan Kondisi";
+                
+                if (currentVal > 50) {
+                    currentEl.className = "w-14 h-14 bg-amber-500 border-2 border-amber-300 rounded-lg flex items-center justify-center font-bold text-lg scale-105 transition-all duration-300 shadow-lg text-gray-900";
+                    explanationText.innerText = `Mengecek apakah ${currentVal} > 50? Jawabannya YA (True). Maka sistem bersiap memasukkan data ke hasil.`;
+                    currentStep = 3; // lanjut ke push data
+                } else {
+                    currentEl.className = "w-14 h-14 bg-red-600 border-2 border-red-400 rounded-lg flex items-center justify-center font-bold text-lg scale-105 transition-all duration-300 shadow-lg text-white";
+                    explanationText.innerText = `Mengecek apakah ${currentVal} > 50? Jawabannya TIDAK (False). Langkah masuk ke baris akhir if, dilewati.`;
+                    currentStep = 4; // loncat ke akhir loop
+                }
+            } 
+            else if (currentStep === 3) {
+                // Masuk ke baris push (memasukkan data)
+                highlightLine(7);
+                statusText.innerText = "Memasukkan Data";
+                explanationText.innerText = `Angka ${currentVal} dimasukkan ke dalam array hasil 'dataSaring'.`;
+                
+                // Ubah status visual asal jadi hijau solid tanda lolos
+                currentEl.className = "w-14 h-14 bg-emerald-600 border-2 border-emerald-400 text-white rounded-lg flex items-center justify-center font-bold text-lg transition-all duration-300 shadow";
+                
+                // Tambahkan elemen baru di wadah hasil (target)
+                const targetEl = document.createElement('div');
+                targetEl.className = "w-14 h-14 bg-emerald-600 border-2 border-emerald-400 rounded-lg flex items-center justify-center font-bold text-lg text-white animate-bounce shadow";
+                targetEl.innerText = currentVal;
+                targetContainer.appendChild(targetEl);
+
+                currentStep = 4;
+            } 
+            else if (currentStep === 4) {
+                // Penutup kurung loop, lanjut ke indeks berikutnya
+                highlightLine(8);
+                statusText.innerText = "Iterasi Selesai";
+                explanationText.innerText = `Selesai memeriksa indeks ke-${currentIndex}. Bersiap menaikkan nilai i (i++).`;
+                
+                // Jika tidak lolos filter, kembalikan warna redup agar fokus beralih
+                if (currentVal <= 50) {
+                    currentEl.className = "w-14 h-14 bg-gray-800/40 border-2 border-gray-700 text-gray-500 rounded-lg flex items-center justify-center font-bold text-lg transition-all duration-300";
+                }
+
+                currentIndex++;
+                currentStep = 1; // kembali ke pengecekan loop atas
+            }
+        }
+
+        // Event Listeners
+        btnNext.addEventListener('click', nextStep);
+        btnReset.addEventListener('click', initData);
+
+        // Jalankan inisialisasi saat halaman load
+        window.onload = initData;
+    </script>
+</body>
+</html>
