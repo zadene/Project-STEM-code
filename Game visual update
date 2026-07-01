@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goosebumps Extreme - Sound & Riddles</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        .glow-green {
+            text-shadow: 0 0 15px rgba(34, 197, 94, 0.8);
+        }
+        .story-gradient {
+            background: linear-gradient(to top, rgba(3, 7, 18, 1) 20%, rgba(3, 7, 18, 0.5) 65%, rgba(3, 7, 18, 0.1) 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-950 text-gray-100 font-sans min-h-screen flex flex-col justify-between select-none">
+
+    <div id="book-selection-screen" class="container mx-auto max-w-4xl p-6 my-auto">
+        <div class="text-center mb-10">
+            <h1 class="text-4xl font-black text-green-500 tracking-widest uppercase glow-green mb-3">📖 GOOSEBUMPS: GENERASI BARU</h1>
+            <p class="text-gray-400 text-sm md:text-base mb-4">Awas! Teka-teki kali ini penuh dengan jebakan logika yang bisa mengecohmu.</p>
+            
+            <button onclick="initAudio()" id="btn-audio" class="bg-gray-800 hover:bg-gray-700 text-xs text-green-400 font-bold px-4 py-2 rounded-lg border border-gray-700 transition cursor-pointer">
+                🎵 Aktifkan Musik Latar (BGM)
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <button onclick="startBook('buku1')" class="bg-gray-900 border-2 border-red-950 hover:border-red-600 p-6 rounded-2xl text-left transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl hover:shadow-red-950/40 group cursor-pointer">
+                <span class="bg-red-950/60 text-red-400 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-red-900">Misteri & Teka-Teki Jebakan</span>
+                <h2 class="text-2xl font-bold mt-3 text-gray-200 group-hover:text-red-400 transition-colors">Teror Lorong Ilusi Moga</h2>
+                <p class="text-sm text-gray-400 mt-2 leading-relaxed">Jangan percaya apa yang kamu lihat. Di lorong ini, logika normal justru bisa membunuhmu!</p>
+            </button>
+
+            <button onclick="startBook('buku2')" class="bg-gray-900 border-2 border-amber-950 hover:border-amber-600 p-6 rounded-2xl text-left transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl hover:shadow-amber-950/40 group cursor-pointer">
+                <span class="bg-amber-950/60 text-amber-400 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-amber-900">Kutukan Makam Kuno</span>
+                <h2 class="text-2xl font-bold mt-3 text-gray-200 group-hover:text-amber-400 transition-colors">Bangkitnya Sphinx Penjaga</h2>
+                <p class="text-sm text-gray-400 mt-2 leading-relaxed">Sphinx tidak meminta kamu berhitung, dia meminta kamu menebak hakikat kehidupan. Salah tebak? Tamat.</p>
+            </button>
+        </div>
+    </div>
+
+    <div id="game-screen" class="hidden flex-1 container mx-auto max-w-3xl p-4 flex flex-col justify-between gap-4">
+        
+        <div class="flex justify-between items-center bg-gray-900/90 backdrop-blur p-3 rounded-xl border border-gray-800 shadow-md">
+            <div class="flex items-center gap-2">
+                <span id="speaker-icon" class="text-lg animate-pulse">🔊</span>
+                <h3 id="game-title" class="text-xs md:text-sm font-black text-green-400 tracking-wider uppercase">JUDUL BUKU</h3>
+            </div>
+            <button onclick="exitGame()" class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1 rounded-lg border border-gray-700 transition cursor-pointer">
+                🚪 Keluar
+            </button>
+        </div>
+
+        <div id="visual-panel" class="flex-1 bg-gray-900 border border-gray-800 rounded-2xl flex flex-col justify-end relative overflow-hidden min-h-[350px] shadow-2xl transition-all duration-500 bg-cover bg-center">
+            <div class="absolute inset-0 story-gradient pointer-events-none"></div>
+            <div class="p-6 relative z-10 max-w-2xl mx-auto text-center">
+                <p id="story-text" class="text-base md:text-lg text-gray-100 font-medium tracking-wide leading-relaxed filter drop-shadow-[0_2px_4px_rgba(0,0,0,1)]">
+                    Memuat narasi cerita...
+                </p>
+            </div>
+        </div>
+
+        <div id="puzzle-panel" class="bg-gray-900 border border-gray-800 p-5 rounded-2xl flex flex-col gap-4 shadow-xl">
+            <div class="border-b border-gray-800 pb-3 flex items-start gap-2">
+                <span class="text-lg mt-0.5">💡</span>
+                <div>
+                    <span id="puzzle-type" class="text-xs font-bold uppercase tracking-widest text-amber-500">Teka-Teki Umum/Jebakan:</span>
+                    <p id="puzzle-question" class="text-sm md:text-base text-gray-300 mt-1 font-mono font-semibold">Pertanyaan teka-teki...</p>
+                </div>
+            </div>
+
+            <div id="choices-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                </div>
+        </div>
+    </div>
+
+    <footer class="bg-gray-950 p-3 text-center text-xs text-gray-600 border-t border-gray-900">
+        Goosebumps Dynamic Audio Engine &copy; 2026
+    </footer>
+
+    <script>
+        // 1. SOUND ENGINE (Menggunakan audio open-source bebas hak cipta untuk testing)
+        const bgm = new Audio("https://assets.mixkit.co/active_storage/sfx/2568/2568-84.wav"); // Suara angin/drone mencekam (loop)
+        bgm.loop = true;
+        bgm.volume = 0.4;
+
+        const sfxCorrect = new Audio("https://assets.mixkit.co/active_storage/sfx/2019/2019-84.wav"); // Suara 'Ding' sukses
+        const sfxWrong = new Audio("https://assets.mixkit.co/active_storage/sfx/2544/2544-84.wav"); // Suara 'Jolt/Scary' gagal
+
+        let audioInitialized = false;
+
+        function initAudio() {
+            if(!audioInitialized) {
+                bgm.play().catch(e => console.log("Audio play diblokir browser, butuh interaksi user."));
+                document.getElementById('btn-audio').innerText = "🎵 Musik Aktif";
+                document.getElementById('btn-audio').classList.add('bg-green-950', 'text-green-400');
+                audioInitialized = true;
+            }
+        }
+
+        // 2. DATA BUKU DENGAN TEKA-TEKI JEBAKAN & UMUM (NON-MATEMATIKA)
+        const databaseBuku = {
+            buku1: {
+                judul: "Teror Lorong Ilusi Moga",
+                startNode: "mulai",
+                storyline: {
+                    mulai: {
+                        cerita: "Kamu terperangkap di koridor melingkar rumah tua lereng Moga. Di ujung lorong, sesosok bayangan hitam tinggi besar memperhatikanmu. Di hadapanmu ada dua pintu dengan tulisan darah. Pintu Kiri tertulis: 'Ruang Singa Kelaparan yang Belum Makan 3 Tahun'. Pintu Kanan tertulis: 'Ruang Pembunuh Berantai Berdarah Dingin dengan Kapak'.",
+                        tekaTeki: "Pintu mana yang PALING AMAN untuk kamu masuki agar bisa lolos?",
+                        tipe: "JEBAKAN LOGIKA",
+                        visualUrl: "https://images.unsplash.com/photo-1509248961158-e54f6934749c?q=80&w=800&auto=format&fit=crop",
+                        pilihan: [
+                            { teks: "Pintu Kiri (Ruang Singa)", targetNode: "ruang_singa", isCorrect: true },
+                            { teks: "Pintu Kanan (Ruang Pembunuh)", targetNode: "gameover_kapak", isCorrect: false },
+                            { teks: "Tetap diam di lorong", targetNode: "gameover_bayangan", isCorrect: false }
+                        ]
+                    },
+                    ruang_singa: {
+                        cerita: "Kamu membuka pintu kiri dengan gemetar... dan ternyata ruangan itu aman! Singa di dalamnya sudah mati kelaparan karena tidak makan selama 3 tahun (jebakan logika yang cerdas!). Kamu menemukan sebuah komputer tua yang menjaga pintu keluar gerbang belakang. Layar monitor memancarkan sebuah pertanyaan teka-teki umum/sains.",
+                        tekaTeki: "Pertanyaan: 'Apa yang bisa mendaki gunung, melewati lautan, berada di sudut ruangan, tapi tidak pernah bergerak sedikit pun?'",
+                        tipe: "TEKA-TEKI UMUM (RIDDLE)",
+                        visualUrl: "https://images.unsplash.com/photo-1544062624-2115164f6998?q=80&w=800&auto=format&fit=crop",
+                        pilihan: [
+                            { teks: "Sebuah Prangko (Stamp)", targetNode: "tamat_menang", isCorrect: true },
+                            { teks: "Sebuah Kompas", targetNode: "gameover_komputer", isCorrect: false },
+                            { teks: "Bayangan", targetNode: "gameover_komputer", isCorrect: false }
+                        ]
+                    },
+                    gameover_kapak: {
+                        cerita: "Begitu pintu kanan terbuka, sang pembunuh langsung mengayunkan kapaknya dengan seringai mengerikan. Kamu tidak sempat menghindar.",
+                        tekaTeki: "GAME OVER - Kamu salah menganalisis bahaya.",
+                        visualUrl: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=800&auto=format&fit=crop",
+                        pilihan: [{ teks: "🔄 Coba Lagi", targetNode: "mulai", isCorrect: false }]
+                    },
+                    gameover_bayangan: {
+                        cerita: "Kamu ragu-ragu dan diam di tempat. Bayangan hitam besar di belakangmu melesat cepat dan menelan kesadaranmu dalam kegelapan mutlak.",
+                        tekaTeki: "GAME OVER - Terlalu lambat mengambil keputusan.",
+                        visualUrl: "https://images.unsplash.com/photo-1505635552518-3448ff116af3?q=80&w=800&auto=format&fit=crop",
+                        pilihan: [{ teks: "🔄 Coba Lagi", targetNode: "mulai", isCorrect: false }]
+                    },
+                    gameover_komputer: {
+                        cerita: "BZZZZT! Jawaban salah. Komputer mengunci sistem secara permanen dan menyalakan aliran listrik di lantai besi tempatmu berdiri. Kamu pingsan tersengat listrik.",
+                        tekaTeki: "GAME OVER - Gagal menebak teka-teki prangko.",
+                        visualUrl: "https://images.unsplash.com/photo-1555664424-778a1e5e1b48?q=80&w=800&auto=format&fit=crop",
+                        pilihan: [{ teks: "🔄 Coba Lagi", targetNode: "mulai", isCorrect: false }]
+                    },
+                    tamat_menang: {
+                        cerita: "KLIK! Komputer menerima jawaban 'Prangko' (yang menempel di sudut amplop tapi bisa keliling dunia). Pintu gerbang belakang terbuka, memancarkan sinar fajar yang hangat. Kamu berhasil lolos dari lorong ilusi!",
+                        tekaTeki: "TAMAT - Kamu berhasil mengalahkan jebakan pikiran!",
+                        visualUrl: "https://images.unsplash.com/photo-1509114397022-ed747cca3f65?q=80&w=800&auto=format&fit=crop",
+                        pilihan: [{ teks: "🎉 Mainkan Buku Lain", targetNode: "EXIT_GAME", isCorrect: false }]
+                    }
+                }
+            },
+            buku2: {
+                judul: "Bangkitnya Sphinx Penjaga",
+                startNode: "mulai",
+                storyline: {
+                    mulai: {
+                        cerita: "Kamu terperangkap di ruang harta karun Mesir Kuno. Tiba-tiba patung Sphinx raksasa di depanmu hidup! Matanya menyala keemasan, menatapmu tajam. Sambil menggeram, ia berkata: 'Aku punya satu pertanyaan jebakan kata. Jika kamu menjawab dengan benar, pintu keluar terbuka. Jika salah, kamu terkubur di sini!'",
+                        tekaTeki: "Pertanyaan Sphinx: 'Jika hari ini hujan, esok hari hujan, dan lusa juga hujan... lalu dalam cuaca apakah bulu kucing paling basah?'",
+                        tipe: "JEBAKAN KATA",
+                        visualUrl: "https://images.unsplash.com/photo-1600577916048-804c9191e36c?q=80&w=800&auto=format&fit=crop",
+                        pilihan: [
+                            { teks: "Dalam cuaca HUJAN", targetNode: "gameover_sphinx", isCorrect: false },
+                            { teks: "Saat kucingnya JATUH KE AIR/SUNGAI", targetNode: "sphinx_lolos", isCorrect: true },
+                            { teks: "Dalam cuaca DINGIN", targetNode: "gameover_sphinx", isCorrect: false }
+                        ]
+                    },
+                    sphinx_lolos: {
+                        cerita: "Sphinx tertegun lalu tertawa menggelegar! Jawabanmu benar, karena bulu kucing basah ya kalau kena air, bukan urusan cuacanya! Gerbang batu bergeser terbuka, mengarah ke jembatan tali. Namun di ujung jembatan, mumi penjaga mengajukan teka-teki pengetahuan umum terakhir.",
+                        tekaTeki: "Mumi bertanya: 'Aku punya kunci tapi tidak bisa membuka gembok. Aku punya ruang tapi tidak punya ruangan. Kamu bisa masuk, tapi tidak bisa keluar. Siapakah aku?'",
+                        tipe: "PENGETAHUAN UMUM / TEKNOLOGI",
+                        visualUrl: "https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=800&auto=format&fit=crop",
+                        pilihan: [
+                            { teks: "Sebuah Peta", targetNode: "gameover_mumi", isCorrect: false },
+                            { teks: "Sebuah Keyboard Komputer (Punya Key & Space)", targetNode: "tamat_buku2", isCorrect: true },
+                            { teks: "Sebuah Penjara", targetNode: "gameover_mumi", isCorrect: false }
+                        ]
+                    },
+                    gameover_sphinx: {
+                        cerita: "Sphinx menggelengkan kepala kecewa. 'Jawabanmu terlalu polos, manusia!' Ia menghentakkan kakinya, membuat lantai pasir amblas dan menenggelamkanmu ke ruang bawah tanah.",
+                        tekaTeki: "GAME OVER - Terkecoh jebakan kata Sphinx.",
+                        visualUrl: "https://images.unsplash.com/photo-1547082299-de196ea013d6?q=80&w=800&auto=format&fit=crop",
+                        pilihan: [{ teks: "🔄 Coba Lagi", targetNode: "mulai", isCorrect: false }]
+                    },
+                    gameover_mumi: {
+                        cerita: "Mumi mengayunkan tongkat magisnya, mengubah jembatan tali menjadi runtuh. Kamu jatuh ke jurang ilusi masa lalu.",
+                        tekaTeki: "GAME OVER - Gagal menebak teka-teki mumi.",
+                        visualUrl: "https://images.unsplash.com/photo-1507146426996-ef05306b995a?q=80&w=800&auto=format&fit=crop",
+                        pilihan: [{ teks: "🔄 Coba Lagi", targetNode: "mulai", isCorrect: false }]
+                    },
+                    tamat_buku2: {
+                        cerita: "Mumi tunduk hormat! Jawaban 'Keyboard' sangat tepat (memiliki tombol 'Key', tombol 'Space/Ruang', dan tombol 'Enter/Masuk'). Gerbang portal waktu aktif dan melemparkanmu kembali ke kamarmu dengan selamat!",
+                        tekaTeki: "TAMAT - Kamu berhasil menaklukkan Kutukan Sphinx!",
+                        visualUrl: "https://images.unsplash.com/photo-1464802686167-b939a6910659?q=80&w=800&auto=format&fit=crop",
+                        pilihan: [{ teks: "🎉 Mainkan Buku Lain", targetNode: "EXIT_GAME", isCorrect: false }]
+                    }
+                }
+            }
+        };
+
+        let bukuAktif = null;
+        let nodeAktif = "";
+
+        function startBook(bookKey) {
+            initAudio(); // Pastikan BGM menyala saat game dimulai
+            bukuAktif = databaseBuku[bookKey];
+            nodeAktif = bukuAktif.startNode;
+
+            document.getElementById('book-selection-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            document.getElementById('game-title').innerText = bukuAktif.judul;
+
+            renderState();
+        }
+
+        function renderState() {
+            const currentData = bukuAktif.storyline[nodeAktif];
+
+            document.getElementById('story-text').innerText = currentData.cerita;
+            document.getElementById('puzzle-question').innerText = currentData.tekaTeki;
+            document.getElementById('puzzle-type').innerText = `Teka-Teki: ${currentData.tipe || 'UMUM'}`;
+
+            const visualPanel = document.getElementById('visual-panel');
+            if (currentData.visualUrl) {
+                visualPanel.style.backgroundImage = `url('${currentData.visualUrl}')`;
+            }
+
+            const choicesContainer = document.getElementById('choices-container');
+            choicesContainer.innerHTML = '';
+
+            currentData.pilihan.forEach(opsi => {
+                const btn = document.createElement('button');
+                btn.className = "p-3 rounded-xl border bg-gray-950/70 backdrop-blur-sm text-left text-xs md:text-sm font-medium transition-all duration-200 cursor-pointer hover:bg-green-950/60 border-gray-800 hover:border-green-500 hover:scale-[1.02]";
+                btn.innerText = opsi.teks;
+                
+                btn.onclick = () => {
+                    // MAINAN SFX EFEK SUARA SUKSES/GAGAL
+                    if (opsi.isCorrect) {
+                        sfxCorrect.currentTime = 0;
+                        sfxCorrect.play();
+                    } else if (opsi.targetNode.startsWith("gameover")) {
+                        sfxWrong.currentTime = 0;
+                        sfxWrong.play();
+                    }
+
+                    if(opsi.targetNode === "EXIT_GAME") {
+                        exitGame();
+                    } else {
+                        nodeAktif = opsi.targetNode;
+                        renderState();
+                    }
+                };
+                choicesContainer.appendChild(btn);
+            });
+        }
+
+        function exitGame() {
+            bukuAktif = null;
+            nodeAktif = "";
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('book-selection-screen').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
